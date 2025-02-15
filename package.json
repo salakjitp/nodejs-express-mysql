@@ -13,7 +13,7 @@
   ],
   "author": "Salakjit P",
   "license": "ISC",
-  "description": "Nodejs RESTful CRUD API with Nodejs, Express and MySQL",
+  "description": "Nodejs RESTapi with Nodejs, Express and MySQL",
   "dependencies": {
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
