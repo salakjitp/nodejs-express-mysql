@@ -25,7 +25,7 @@ app.use('/users', usersRoute);
 //     password: dbConfig.password,
 //     database: dbConfig.database
 // });
-
+  
 // // Connect to MySQL
 // db.connect((err) => {
 //     if (err) {
