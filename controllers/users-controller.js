@@ -6,7 +6,25 @@ const Users = require('../models/users-model');
 const dbConfig = { ...$dbConfig, database: "mydb" }
 
 exports.getUsers = async (req, res) => {
-    let sql = `SELECT * FROM users`;
+
+    const params = req.query || {};
+    let values = [];
+
+    if (params.userid) {
+        values.push(`userid=${params.userid}`)
+    }
+    if (params.firstname) {
+        values.push(`firstname=${params.firstname}`)
+    }
+    if (params.lastname) {
+        values.push(`lastname=${params.lastname}`)
+    }
+    if (params.username) {
+        values.push(`username=${params.username}`)
+    }
+
+    const sql = `SELECT * FROM users WHERE ${values.length > 0 ? values.join(' && ') : '1=1'}`;
+
     const conn = await connection(dbConfig).catch(e => console.log(e));
     const data = await query(conn, sql).catch(console.log);
 
@@ -15,6 +33,31 @@ exports.getUsers = async (req, res) => {
         data: data || [],
         message: "List retrieved successfully",
     });
+}
+
+exports.getUserById = async (req, res) => {
+
+    const userId = req.query.id;
+
+    if (userId) {
+        let sql = `SELECT * FROM users WHERE userId = ${userId}`;
+        const conn = await connection(dbConfig).catch(e => console.log(e));
+        const data = await query(conn, sql).catch(console.log);
+
+        res.status(200).json({
+            status: 200,
+            data: data.length > 0 ? data[0] || {} : {},
+            message: "Get user successfully",
+        });
+    }
+    else {
+        res.status(200).json({
+            status: 200,
+            data: {},
+            message: "Get user : null",
+        });
+    }
+
 }
 
 exports.postUser = async (req, res) => {
@@ -57,8 +100,6 @@ exports.putUser = async (req, res) => {
     const _data = new Users(req.body);
     _data.validation()
     const userId = req.params.id;
-
-    console.log({ body: req.body, params: req.params })
 
     if (_data.errors.length) {
         res.status(400).json({

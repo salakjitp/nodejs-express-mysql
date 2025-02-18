@@ -4,6 +4,7 @@ const controller = require('../controllers/users-controller');
 
 //GET
 router.get('/list', controller.getUsers);
+router.get('/dataById', controller.getUserById);
 
 //POST : create new
 router.post('/add', controller.postUser);
