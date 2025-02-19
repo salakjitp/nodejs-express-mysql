@@ -11,6 +11,6 @@ const user = process.env.DB_USER || 'root';
 const password = process.env.DB_PASS || 'password';
 
 // Get the Database from Environment or use default
-const database = process.env.DB_DATABASE || 'cats';
+const database = process.env.DB_DATABASE || 'mydb';
 
 module.exports = { host, user, password, database };

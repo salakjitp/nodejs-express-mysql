@@ -1,170 +1,289 @@
-const $dbConfig = require('../configs/db'),
-    connection = require('../utils/connection'),
-    query = require('../utils/query');
+// const $dbConfig = require('../configs/db'),
+//     connection = require('../utils/connection'),
+//     query = require('../utils/query');
 const Users = require('../models/users-model');
-
-const dbConfig = { ...$dbConfig, database: "mydb" }
 
 exports.getUsers = async (req, res) => {
 
     const params = req.query || {};
-    let values = [];
-
+    const _where = {};
     if (params.userid) {
-        values.push(`userid=${params.userid}`)
+        _where['userid'] = params.userid
     }
     if (params.firstname) {
-        values.push(`firstname=${params.firstname}`)
+        _where['firstname'] = params.firstname
     }
     if (params.lastname) {
-        values.push(`lastname=${params.lastname}`)
+        _where['lastname'] = params.lastname
     }
     if (params.username) {
-        values.push(`username=${params.username}`)
+        _where['username'] = params.username
     }
 
-    const sql = `SELECT * FROM users WHERE ${values.length > 0 ? values.join(' && ') : '1=1'}`;
+    Users.findAll({ where: { ..._where } }).then((result) => {
+        console.log(result)
 
-    const conn = await connection(dbConfig).catch(e => console.log(e));
-    const data = await query(conn, sql).catch(console.log);
-
-    res.status(200).json({
-        status: 200,
-        data: data || [],
-        message: "List retrieved successfully",
+        res.status(200).json({
+            status: 200,
+            data: result || [],
+            message: "List retrieved successfully",
+        });
+    }).catch((err) => {
+        res.status(400).json({
+            status: 400,
+            message: err
+        });
     });
+
+    // const params = req.query || {};
+    // let values = [];
+
+    // if (params.userid) {
+    //     values.push(`userid=${params.userid}`)
+    // }
+    // if (params.firstname) {
+    //     values.push(`firstname=${params.firstname}`)
+    // }
+    // if (params.lastname) {
+    //     values.push(`lastname=${params.lastname}`)
+    // }
+    // if (params.username) {
+    //     values.push(`username=${params.username}`)
+    // }
+
+    // const sql = `SELECT * FROM users WHERE ${values.length > 0 ? values.join(' && ') : '1=1'}`;
+
+    // const conn = await connection(dbConfig).catch(e => console.log(e));
+    // const data = await query(conn, sql).catch(console.log);
+
+    // res.status(200).json({
+    //     status: 200,
+    //     data: data || [],
+    //     message: "List retrieved successfully",
+    // });
 }
 
 exports.getUserById = async (req, res) => {
 
     const userId = req.query.id;
 
-    if (userId) {
-        let sql = `SELECT * FROM users WHERE userId = ${userId}`;
-        const conn = await connection(dbConfig).catch(e => console.log(e));
-        const data = await query(conn, sql).catch(console.log);
+    Users.findByPk(userId).then((result) => {
+        res.status(200).json({
+            status: 200,
+            data: result || null,
+            message: "Success"
+        });
+    }).catch((err) => {
+        res.status(400).json({
+            status: 400,
+            message: err
+        });
+    });;
 
-        res.status(200).json({
-            status: 200,
-            data: data.length > 0 ? data[0] || {} : {},
-            message: "Get user successfully",
-        });
-    }
-    else {
-        res.status(200).json({
-            status: 200,
-            data: {},
-            message: "Get user : null",
-        });
-    }
+    // if (userId) {
+    //     let sql = `SELECT * FROM users WHERE userId = ${userId}`;
+    //     const conn = await connection(dbConfig).catch(e => console.log(e));
+    //     const data = await query(conn, sql).catch(console.log);
+
+    //     res.status(200).json({
+    //         status: 200,
+    //         data: data.length > 0 ? data[0] || {} : {},
+    //         message: "Get user successfully",
+    //     });
+    // }
+    // else {
+    //     res.status(200).json({
+    //         status: 200,
+    //         data: {},
+    //         message: "Get user : null",
+    //     });
+    // }
 
 }
 
 exports.postUser = async (req, res) => {
-    const _data = new Users(req.body);
-    _data.validation()
+    const _data = req.body;
 
-    if (_data.errors.length) {
+    Users.create({
+        ..._data
+    }).then((result) => {
+        console.log(result[0])
+
+        res.status(200).json({
+            status: 200,
+            message: "Success"
+        });
+    }).catch((err) => {
+
         res.status(400).json({
             status: 400,
-            message: _data.errors
-        })
-    }
-    else {
-        let sql = `INSERT INTO users (firstname, lastname, username) VALUES (?)`;
-        let values = [
-            _data.firstname,
-            _data.lastname,
-            _data.username
-        ];
+            message: err
+        });
+    });
 
-        const conn = await connection(dbConfig).catch(e => console.log(e));
-        const data = await query(conn, sql, [values])
-            .catch(console.log);
+    // const _data = new Users(req.body);
+    // _data.validation()
 
-        if (data.affectedRows > 0) {
-            res.status(200).json({
-                status: 200,
-                message: "Added successfully"
-            })
-        } else {
-            res.status(200).json({
-                status: 200,
-                message: data
-            })
-        }
-    }
+    // if (_data.errors.length) {
+    //     res.status(400).json({
+    //         status: 400,
+    //         message: _data.errors
+    //     })
+    // }
+    // else {
+    //     let sql = `INSERT INTO users (firstname, lastname, username) VALUES (?)`;
+    //     let values = [
+    //         _data.firstname,
+    //         _data.lastname,
+    //         _data.username
+    //     ];
+
+    //     const conn = await connection(dbConfig).catch(e => console.log(e));
+    //     const data = await query(conn, sql, [values])
+    //         .catch(console.log);
+
+    //     if (data.affectedRows > 0) {
+    //         res.status(200).json({
+    //             status: 200,
+    //             message: "Added successfully"
+    //         })
+    //     } else {
+    //         res.status(200).json({
+    //             status: 200,
+    //             message: data
+    //         })
+    //     }
+    // }
 };
 
 exports.putUser = async (req, res) => {
-    const _data = new Users(req.body);
-    _data.validation()
+
+    const _data = req.body;
     const userId = req.params.id;
 
-    if (_data.errors.length) {
-        res.status(400).json({
-            status: 400,
-            message: _data.errors
+    Users.findByPk(userId)
+        .then(dataUser => {
+
+            dataUser.firstname = _data.firstname;
+            dataUser.lastname = _data.lastname;
+            dataUser.username = _data.username;
+
+            return dataUser.save();
+
         })
-    }
-    else {
-        let sql = `UPDATE users SET ? WHERE ?`;
-        let values = [{ firstname: _data.firstname, lastname: _data.lastname, username: _data.username }, { userId: userId }];
-
-        const conn = await connection(dbConfig).catch(e => console.log(e));
-        const data = await query(conn, sql, values)
-            .catch(console.log)
-
-        if (data == undefined) {
+        .then(result => {
+            res.status(200).json({
+                status: 200,
+                data: result || null,
+                message: "update success"
+            })
+        })
+        .catch(err => {
+            console.log(err)
             res.status(400).json({
                 status: 400,
-                message: "Error updated."
+                message: err
             })
-        }
-        else if (data.affectedRows > 0) {
-            res.status(200).json({
-                status: 200,
-                message: "updated successfully"
-            })
-        } else {
-            res.status(200).json({
-                status: 200,
-                message: data
-            })
-        }
-    }
+        });
+
+    // const _data = new Users(req.body);
+    // _data.validation()
+    // const userId = req.params.id;
+
+    // if (_data.errors.length) {
+    //     res.status(400).json({
+    //         status: 400,
+    //         message: _data.errors
+    //     })
+    // }
+    // else {
+    //     let sql = `UPDATE users SET ? WHERE ?`;
+    //     let values = [{ firstname: _data.firstname, lastname: _data.lastname, username: _data.username }, { userId: userId }];
+
+    //     const conn = await connection(dbConfig).catch(e => console.log(e));
+    //     const data = await query(conn, sql, values)
+    //         .catch(console.log)
+
+    //     if (data == undefined) {
+    //         res.status(400).json({
+    //             status: 400,
+    //             message: "Error updated."
+    //         })
+    //     }
+    //     else if (data.affectedRows > 0) {
+    //         res.status(200).json({
+    //             status: 200,
+    //             message: "updated successfully"
+    //         })
+    //     } else {
+    //         res.status(200).json({
+    //             status: 200,
+    //             message: data
+    //         })
+    //     }
+    // }
 };
 
 exports.delUser = async (req, res) => {
-    const _data = new Users(req.body);
-    _data.validation()
+
     const userId = req.params.id;
-    if (userId == null || userId == undefined) {
+
+    const dataUser = await Users.findByPk(userId)
+        .then(query => {
+            return query
+        })
+        .catch(err => {
+            res.status(400).json({
+                status: 400,
+                message: err
+            })
+        });
+
+    console.log('dataUser', dataUser)
+    if (dataUser == null || dataUser == undefined) {
         res.status(400).json({
             status: 400,
-            message: _data.errors
+            message: "delete fail"
         })
-    }
-    else {
-        let sql = `DELETE FROM users WHERE userid = ?`;
-        let values = [userId];
-
-        const conn = await connection(dbConfig).catch(e => console.log(e));
-        const data = await query(conn, sql, values)
-            .catch(console.log);
-
-        if (data.affectedRows > 0) {
+    } else {
+        dataUser.destroy().then(result => {
             res.status(200).json({
                 status: 200,
-                message: "Deleted successfully"
+                data: result || null,
+                message: "delete success"
             })
-        } else {
-            res.status(200).json({
-                status: 200,
-                message: data
-            })
-        }
+        });
     }
+
+    // const _data = new Users(req.body);
+    // _data.validation()
+    // const userId = req.params.id;
+    // if (userId == null || userId == undefined) {
+    //     res.status(400).json({
+    //         status: 400,
+    //         message: _data.errors
+    //     })
+    // }
+    // else {
+    //     let sql = `DELETE FROM users WHERE userid = ?`;
+    //     let values = [userId];
+
+    //     const conn = await connection(dbConfig).catch(e => console.log(e));
+    //     const data = await query(conn, sql, values)
+    //         .catch(console.log);
+
+    //     if (data.affectedRows > 0) {
+    //         res.status(200).json({
+    //             status: 200,
+    //             message: "Deleted successfully"
+    //         })
+    //     } else {
+    //         res.status(200).json({
+    //             status: 200,
+    //             message: data
+    //         })
+    //     }
+    // }
 };
 
 // // Get all user

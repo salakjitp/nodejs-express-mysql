@@ -2,6 +2,7 @@ var express = require('express')
 var cors = require('cors')
 // const mysql = require('mysql2');
 // const dbConfig = require('./configs/db');
+const sequelize = require('./utils/connection')
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -10,11 +11,11 @@ app.use(cors())
 app.use(express.json());
 
 // routers
-const catbreedRoute = require('./routes/catbreed');
+// const catbreedRoute = require('./routes/catbreed');
 const usersRoute = require('./routes/users');
 
 // use router
-app.use('/catbreed', catbreedRoute);
+// app.use('/catbreed', catbreedRoute);
 app.use('/users', usersRoute);
 
 
@@ -25,7 +26,7 @@ app.use('/users', usersRoute);
 //     password: dbConfig.password,
 //     database: dbConfig.database
 // });
-  
+
 // // Connect to MySQL
 // db.connect((err) => {
 //     if (err) {
@@ -35,7 +36,15 @@ app.use('/users', usersRoute);
 //     console.log('Connected to database');
 // });
 
-// Start the server
-app.listen(PORT, () => {
-    console.log(`Server started, listening port: ${PORT}`);
-});
+sequelize
+    .sync()
+    .then(res => {
+        // console.log(res);
+
+        // Start the server
+        app.listen(PORT, () => {
+            console.log(`Server started, listening port: ${PORT}`);
+        });
+    }).catch(err => {
+        console.log(err)
+    });
